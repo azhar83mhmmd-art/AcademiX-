@@ -6,8 +6,8 @@
 /* ─────────────────────────────────────────────────────────────
    SUPABASE CONFIG — Ganti dengan credentials Supabase kamu
    ───────────────────────────────────────────────────────────── */
-const SUPABASE_URL    = 'https://ckqcpviipscapbyngepp.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_7YMEQSMDsUJTmDvYtXp0wg_A8cvKh6s';
+const SUPABASE_URL    = 'https://omqlsujuwltkhaccwcvy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_aR9Ww6-le9_SXCLw8KmVvQ_1WEnjudE';
 const ADMIN_EMAIL     = 'kenzstrx739@gmail.com';
 
 const { createClient } = supabase;

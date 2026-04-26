@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AcademiX — Platform Belajar & Ujian</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay" class="loading-overlay hidden">
+  <div class="loading-ring">
+    <svg viewBox="0 0 50 50" class="loading-svg">
+      <circle cx="25" cy="25" r="20" fill="none" stroke-width="3"/>
+    </svg>
+    <span class="loading-text">Memuat...</span>
+  </div>
+</div>
+
+<!-- ======================== LANDING PAGE ======================== -->
+<div id="page-landing" class="page active">
+  <nav class="landing-nav">
+    <div class="nav-brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="url(#brandGrad)"/>
+          <path d="M8 22L16 10L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M11 18H21" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="brandGrad" x1="0" y1="0" x2="32" y2="32">
+              <stop offset="0%" stop-color="#6c63ff"/>
+              <stop offset="100%" stop-color="#06b6d4"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span>AcademiX</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-ghost" onclick="openModal('modal-login')">Masuk</button>
+      <button class="btn btn-primary nav-cta" onclick="loginWithGoogle()">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Mulai Gratis
+      </button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-mesh"></div>
+    <div class="hero-particles">
+      <div class="particle p1"></div>
+      <div class="particle p2"></div>
+      <div class="particle p3"></div>
+      <div class="particle p4"></div>
+      <div class="particle p5"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+        Platform Pendidikan Modern
+      </div>
+      <h1 class="hero-title">Belajar Lebih Cerdas,<br /><span class="gradient-text">Ujian Lebih Adil</span></h1>
+      <p class="hero-subtitle">Platform terintegrasi untuk belajar, ujian, dan berinteraksi secara realtime. Dirancang untuk siswa dan guru masa depan.</p>
+      <div class="hero-cta">
+        <button class="btn btn-primary btn-xl" onclick="loginWithGoogle()">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Masuk dengan Google
+        </button>
+        <button class="btn btn-glass btn-xl" onclick="openModal('modal-login'); switchLoginTab('email')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          Masuk dengan Email
+        </button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <span class="hero-stat-value">10K+</span>
+          <span class="hero-stat-label">Siswa Aktif</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">500+</span>
+          <span class="hero-stat-label">Mata Pelajaran</span>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <span class="hero-stat-value">98%</span>
+          <span class="hero-stat-label">Kepuasan</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card-float card-1">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6c63ff" stroke-width="2"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+        <span>Nilai Rata-rata: <strong>92</strong></span>
+      </div>
+      <div class="hero-card-float card-2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        <span>Peringkat <strong>#1</strong> Minggu ini</span>
+      </div>
+      <div class="hero-card-float card-3">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Ujian Aman & Adil</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Fitur Unggulan</div>
+        <h2>Semua yang Kamu Butuhkan</h2>
+        <p>Fitur lengkap untuk pengalaman belajar yang menyenangkan dan efektif</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon-wrap" style="--icon-color: #6c63ff">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6c63ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <h3>Kisi-Kisi Pintar</h3>
+          <p>Materi belajar terstruktur per mata pelajaran dengan sistem kisi-kisi interaktif berbasis Markdown.</p>
+          <div class="feature-tag">Belajar</div>
+        </div>
+        <div class="feature-card feature-card--accent">
+          <div class="feature-icon-wrap" style="--icon-color: #06b6d4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Ujian Anti-Curang</h3>
+          <p>Sistem deteksi tab switching otomatis dengan peringatan bertahap untuk memastikan integritas ujian.</p>
+          <div class="feature-tag">Keamanan</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap" style="--icon-color: #f59e0b">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+          </div>
+          <h3>Leaderboard Realtime</h3>
+          <p>Kompetisi sehat dengan update peringkat secara langsung dan transparan via Supabase Realtime.</p>
+          <div class="feature-tag">Kompetisi</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap" style="--icon-color: #ec4899">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          </div>
+          <h3>Confession Anonim</h3>
+          <p>Ruang aman untuk berbagi tanpa identitas, dimoderasi oleh admin agar tetap kondusif.</p>
+          <div class="feature-tag">Sosial</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap" style="--icon-color: #10b981">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3>Broadcast Langsung</h3>
+          <p>Pengumuman penting dari admin tersampaikan ke seluruh siswa secara instan dan real-time.</p>
+          <div class="feature-tag">Komunikasi</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-wrap" style="--icon-color: #a78bfa">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <h3>Tracking Progress</h3>
+          <p>Pantau perkembangan belajar dengan grafik nilai, statistik jawaban, dan riwayat ujian detail.</p>
+          <div class="feature-tag">Analitik</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Cara Kerja</div>
+        <h2>Mulai dalam 3 Langkah</h2>
+        <p>Proses yang simpel, hasil yang maksimal</p>
+      </div>
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-visual">
+            <div class="step-number">01</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <h3>Daftar & Masuk</h3>
+            <p>Gunakan akun Google atau email untuk masuk. OTP dikirim otomatis dan aman ke emailmu.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-visual">
+            <div class="step-number">02</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-content">
+            <div class="step-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <h3>Pilih Mata Pelajaran</h3>
+            <p>Jelajahi kisi-kisi dan materi belajar yang tersedia. Beri rating untuk membantu siswa lain.</p>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-visual">
+            <div class="step-number">03</div>
+          </div>
+          <div class="step-content">
+            <div class="step-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+            </div>
+            <h3>Ikuti Ujian</h3>
+            <p>Kerjakan soal dengan jujur, lihat nilai otomatis dan posisimu di leaderboard secara langsung.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="landing-footer">
+    <div class="footer-brand">
+      <div class="brand-logo" style="width:24px;height:24px;">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="url(#footerGrad)"/>
+          <path d="M8 22L16 10L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M11 18H21" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <defs><linearGradient id="footerGrad" x1="0" y1="0" x2="32" y2="32"><stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+        </svg>
+      </div>
+      <span>AcademiX</span>
+    </div>
+    <p>AcademiX &copy; 2025 — Platform Pendidikan Modern. Dibuat dengan ❤️ untuk siswa Indonesia.</p>
+  </footer>
+</div>
+
+<!-- ======================== MODAL LOGIN ======================== -->
+<div id="modal-login" class="modal-overlay hidden">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-login')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-header">
+      <div class="modal-brand-icon">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width="36" height="36">
+          <rect width="32" height="32" rx="8" fill="url(#modalGrad)"/>
+          <path d="M8 22L16 10L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M11 18H21" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <defs><linearGradient id="modalGrad" x1="0" y1="0" x2="32" y2="32"><stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+        </svg>
+      </div>
+      <h2>Selamat Datang</h2>
+      <p>Masuk untuk melanjutkan ke AcademiX</p>
+    </div>
+    <div class="login-tabs">
+      <button class="tab-btn active" id="tab-google" onclick="switchLoginTab('google')">
+        <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Google
+      </button>
+      <button class="tab-btn" id="tab-email" onclick="switchLoginTab('email')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        Email
+      </button>
+    </div>
+
+    <div id="login-google-panel" class="login-panel">
+      <button class="btn btn-google btn-full" onclick="loginWithGoogle()">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Masuk dengan Google
+      </button>
+    </div>
+
+    <div id="login-email-panel" class="login-panel hidden">
+      <div id="email-step-1">
+        <div class="form-group">
+          <label>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            Alamat Email
+          </label>
+          <input type="email" id="login-email-input" class="input" placeholder="namamu@email.com" />
+        </div>
+        <button class="btn btn-primary btn-full" onclick="handleEmailSubmit()">
+          Lanjutkan
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+        </button>
+      </div>
+      <div id="email-step-2" class="hidden">
+        <div class="otp-info">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6c63ff" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 17.92v-.01z"/></svg>
+          <div>
+            <p>Kode OTP 8 digit telah dikirim ke <strong id="otp-email-display"></strong></p>
+            <p class="otp-timer">Berlaku selama <span id="otp-countdown">5:00</span></p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Kode OTP
+          </label>
+          <div class="otp-boxes" id="otp-boxes">
+            <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+            <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+            <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+            <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+            <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+            <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+            <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+            <input type="text" class="otp-box" maxlength="1" inputmode="numeric" pattern="[0-9]" />
+          </div>
+          <!-- hidden input untuk kompatibilitas dengan handleOTPVerify() -->
+          <input type="hidden" id="login-otp-input" />
+        </div>
+        <button class="btn btn-primary btn-full" onclick="handleOTPVerify()">Verifikasi Kode</button>
+        <button class="btn btn-ghost btn-full" onclick="resetEmailLogin()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+          Ganti Email
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== MAIN APP ======================== -->
+<div id="page-app" class="page hidden">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="url(#sidebarGrad)"/>
+          <path d="M8 22L16 10L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M11 18H21" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <defs><linearGradient id="sidebarGrad" x1="0" y1="0" x2="32" y2="32"><stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+        </svg>
+      </div>
+      <span>AcademiX</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a href="#" class="nav-item" data-page="subjects" onclick="navigate('subjects')">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Mata Pelajaran
+      </a>
+      <a href="#" class="nav-item" data-page="exams" onclick="navigate('exams')">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Ujian
+      </a>
+      <a href="#" class="nav-item" data-page="results" onclick="navigate('results')">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Hasil Ujian
+      </a>
+      <a href="#" class="nav-item" data-page="leaderboard" onclick="navigate('leaderboard')">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+        Leaderboard
+      </a>
+      <a href="#" class="nav-item" data-page="social" onclick="navigate('social')">
+        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Sosial
+      </a>
+      <!-- Admin only -->
+      <div id="admin-nav" class="hidden">
+        <div class="nav-divider">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          Admin Panel
+        </div>
+        <a href="#" class="nav-item" data-page="admin-subjects" onclick="navigate('admin-subjects')">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Kelola Mapel
+        </a>
+        <a href="#" class="nav-item" data-page="admin-questions" onclick="navigate('admin-questions')">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Kelola Soal
+        </a>
+        <a href="#" class="nav-item" data-page="admin-monitor" onclick="navigate('admin-monitor')">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Monitoring
+        </a>
+        <a href="#" class="nav-item" data-page="admin-moderation" onclick="navigate('admin-moderation')">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Moderasi
+        </a>
+        <a href="#" class="nav-item" data-page="admin-broadcast" onclick="navigate('admin-broadcast')">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Broadcast
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-avatar"></div>
+        <div class="user-details">
+          <span id="sidebar-username">Loading...</span>
+          <span id="sidebar-role" class="role-badge">Siswa</span>
+        </div>
+      </div>
+      <button class="btn btn-icon logout-btn" onclick="logout()" title="Keluar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOP BAR (mobile) -->
+  <header class="topbar">
+    <button class="btn btn-icon" onclick="toggleSidebar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="topbar-brand">
+      <div class="brand-logo" style="width:22px;height:22px;">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="8" fill="url(#topbarGrad)"/>
+          <path d="M8 22L16 10L24 22" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M11 18H21" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          <defs><linearGradient id="topbarGrad" x1="0" y1="0" x2="32" y2="32"><stop offset="0%" stop-color="#6c63ff"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+        </svg>
+      </div>
+      <span class="topbar-title" id="topbar-title">Dashboard</span>
+    </div>
+    <div class="topbar-user">
+      <div class="user-avatar sm" id="topbar-avatar"></div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- BROADCAST BANNER -->
+    <div id="broadcast-banner" class="broadcast-banner hidden">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <span id="broadcast-text"></span>
+      <button onclick="document.getElementById('broadcast-banner').classList.add('hidden')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- ===== DASHBOARD ===== -->
+    <section id="section-dashboard" class="app-section active">
+      <div class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p id="welcome-msg">Selamat datang kembali!</p>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="--stat-color: #6c63ff; --stat-bg: rgba(108,99,255,0.12)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6c63ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Ujian Selesai</div>
+            <div class="stat-value" id="stat-exams-done">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="--stat-color: #10b981; --stat-bg: rgba(16,185,129,0.12)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Rata-rata Nilai</div>
+            <div class="stat-value" id="stat-avg-score">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="--stat-color: #f59e0b; --stat-bg: rgba(245,158,11,0.12)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Peringkat</div>
+            <div class="stat-value" id="stat-rank">#--</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="--stat-color: #a78bfa; --stat-bg: rgba(167,139,250,0.12)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Mata Pelajaran</div>
+            <div class="stat-value" id="stat-subjects">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+              Aktivitas Terbaru
+            </h3>
+          </div>
+          <div id="recent-activity" class="activity-list">
+            <div class="skeleton-list"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+              Top 5 Leaderboard
+            </h3>
+          </div>
+          <div id="mini-leaderboard" class="mini-leaderboard">
+            <div class="skeleton-list"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MATA PELAJARAN ===== -->
+    <section id="section-subjects" class="app-section">
+      <div class="page-header">
+        <div>
+          <h1>Mata Pelajaran</h1>
+          <p>Pilih mapel untuk melihat kisi-kisi dan materi belajar</p>
+        </div>
+      </div>
+      <div class="search-bar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="subject-search" class="input" placeholder="Cari mata pelajaran..." oninput="debounceSearch(this.value, 'subjects')" />
+      </div>
+      <div id="subjects-grid" class="subjects-grid">
+        <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+      </div>
+    </section>
+
+    <!-- ===== DETAIL MAPEL ===== -->
+    <section id="section-subject-detail" class="app-section">
+      <div class="page-header">
+        <button class="btn btn-ghost back-btn" onclick="navigate('subjects')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/></svg>
+          Kembali
+        </button>
+        <h1 id="subject-detail-title">Nama Mapel</h1>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchSubjectTab('kisi')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Kisi-Kisi
+        </button>
+        <button class="tab-btn" onclick="switchSubjectTab('rating')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+          Rating
+        </button>
+      </div>
+      <div id="kisi-panel" class="tab-panel">
+        <div id="kisi-content" class="kisi-list"></div>
+      </div>
+      <div id="rating-panel" class="tab-panel hidden">
+        <div class="rating-container">
+          <h3>Rating Mata Pelajaran</h3>
+          <div class="stars-display" id="stars-display"></div>
+          <div class="rating-avg" id="rating-avg">Belum ada rating</div>
+          <div class="my-rating">
+            <p>Berikan rating kamu:</p>
+            <div class="stars-input" id="stars-input">
+              <span class="star" data-val="1" onclick="rateSubject(1)">&#9733;</span>
+              <span class="star" data-val="2" onclick="rateSubject(2)">&#9733;</span>
+              <span class="star" data-val="3" onclick="rateSubject(3)">&#9733;</span>
+              <span class="star" data-val="4" onclick="rateSubject(4)">&#9733;</span>
+              <span class="star" data-val="5" onclick="rateSubject(5)">&#9733;</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== UJIAN LIST ===== -->
+    <section id="section-exams" class="app-section">
+      <div class="page-header">
+        <div>
+          <h1>Ujian</h1>
+          <p>Pilih ujian yang ingin dikerjakan</p>
+        </div>
+      </div>
+      <div id="exams-list" class="exams-list">
+        <div class="skeleton-card"></div><div class="skeleton-card"></div>
+      </div>
+    </section>
+
+    <!-- ===== EXAM ROOM ===== -->
+    <section id="section-exam-room" class="app-section">
+      <div class="exam-header">
+        <div>
+          <h2 id="exam-title">Nama Ujian</h2>
+          <p id="exam-subject">Mata Pelajaran</p>
+        </div>
+        <div class="exam-timer" id="exam-timer">00:00</div>
+      </div>
+      <div class="exam-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" id="exam-progress-fill"></div>
+        </div>
+        <span id="exam-progress-text">0 / 0</span>
+      </div>
+      <div id="question-area" class="question-area"></div>
+      <div class="exam-nav">
+        <button class="btn btn-outline" id="btn-prev" onclick="prevQuestion()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/></svg>
+          Sebelumnya
+        </button>
+        <div class="question-dots" id="question-dots"></div>
+        <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()">
+          Selanjutnya
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+        </button>
+      </div>
+      <div class="exam-submit" id="exam-submit" style="display:none;">
+        <button class="btn btn-success btn-xl" onclick="submitExam()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"/></svg>
+          Kirim Jawaban
+        </button>
+      </div>
+      <div id="cheat-warning" class="cheat-warning hidden">
+        <div class="cheat-warning-box">
+          <div class="cheat-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h3>Peringatan!</h3>
+          <p>Kamu terdeteksi keluar dari halaman ujian.</p>
+          <p id="cheat-count-msg">Peringatan 1 dari 3</p>
+          <button class="btn btn-primary" onclick="dismissCheatWarning()">Kembali ke Ujian</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== HASIL UJIAN ===== -->
+    <section id="section-results" class="app-section">
+      <div class="page-header">
+        <div>
+          <h1>Hasil Ujian</h1>
+          <p>Riwayat semua ujian yang pernah dikerjakan</p>
+        </div>
+      </div>
+      <div id="results-list" class="results-list">
+        <div class="skeleton-card"></div><div class="skeleton-card"></div>
+      </div>
+    </section>
+
+    <!-- ===== LEADERBOARD ===== -->
+    <section id="section-leaderboard" class="app-section">
+      <div class="page-header">
+        <div>
+          <h1>Leaderboard</h1>
+          <p>Peringkat berdasarkan rata-rata nilai terbaik</p>
+        </div>
+      </div>
+      <div class="leaderboard-filter">
+        <select class="input" id="leaderboard-subject-filter" onchange="loadLeaderboard()">
+          <option value="">Semua Mata Pelajaran</option>
+        </select>
+      </div>
+      <div id="leaderboard-table" class="leaderboard-table">
+        <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+      </div>
+    </section>
+
+    <!-- ===== SOSIAL ===== -->
+    <section id="section-social" class="app-section">
+      <div class="page-header">
+        <div>
+          <h1>Sosial</h1>
+          <p>Ruang interaksi dan confession anonim</p>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchSocialTab('confession')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Confession
+        </button>
+        <button class="tab-btn" onclick="switchSocialTab('comments')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Komentar Umum
+        </button>
+      </div>
+
+      <div id="confession-panel" class="tab-panel">
+        <div class="card confession-compose">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Kirim Pesan Anonim
+          </h3>
+          <p class="text-muted">Pesanmu akan tampil dengan nama "Anonymous". Hanya admin yang bisa melihat identitas aslimu.</p>
+          <textarea id="confession-text" class="input textarea" placeholder="Tulis perasaan atau pikiranmu di sini..."></textarea>
+          <button class="btn btn-primary" onclick="sendConfession()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+            Kirim Anonim
+          </button>
+        </div>
+        <div class="sort-bar">
+          <button class="btn btn-ghost btn-sm active" onclick="setSort('confession', 'newest', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            Terbaru
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="setSort('confession', 'popular', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Terpopuler
+          </button>
+        </div>
+        <div id="confession-list" class="feed-list"></div>
+      </div>
+
+      <div id="comments-panel" class="tab-panel hidden">
+        <div class="card comment-compose">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Tulis Komentar
+          </h3>
+          <input type="text" id="comment-text" class="input" placeholder="Tulis komentar dengan namamu..." />
+          <button class="btn btn-primary" onclick="sendComment()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+            Kirim
+          </button>
+        </div>
+        <div class="sort-bar">
+          <button class="btn btn-ghost btn-sm active" onclick="setSort('comment', 'newest', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            Terbaru
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="setSort('comment', 'popular', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Terpopuler
+          </button>
+        </div>
+        <div id="comments-list" class="feed-list"></div>
+      </div>
+    </section>
+
+    <!-- ===== ADMIN: KELOLA MAPEL ===== -->
+    <section id="section-admin-subjects" class="app-section">
+      <div class="page-header">
+        <div>
+          <h1>Kelola Mata Pelajaran</h1>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-add-subject')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Mapel
+        </button>
+      </div>
+      <div id="admin-subjects-list" class="admin-list"></div>
+    </section>
+
+    <!-- ===== ADMIN: KELOLA SOAL ===== -->
+    <section id="section-admin-questions" class="app-section">
+      <div class="page-header">
+        <div>
+          <h1>Kelola Soal</h1>
+        </div>
+        <div class="header-actions">
+          <select class="input" id="question-subject-filter" onchange="loadAdminQuestions()">
+            <option value="">Pilih Mata Pelajaran</option>
+          </select>
+          <button class="btn btn-primary" onclick="openModal('modal-add-question')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Soal
+          </button>
+        </div>
+      </div>
+      <div id="admin-questions-list" class="admin-list"></div>
+    </section>
+
+    <!-- ===== ADMIN: MONITORING ===== -->
+    <section id="section-admin-monitor" class="app-section">
+      <div class="page-header">
+        <div>
+          <h1>Monitoring Siswa</h1>
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="--stat-color: #6c63ff; --stat-bg: rgba(108,99,255,0.12)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6c63ff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Total Siswa</div>
+            <div class="stat-value" id="admin-stat-students">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="--stat-color: #10b981; --stat-bg: rgba(16,185,129,0.12)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Total Ujian</div>
+            <div class="stat-value" id="admin-stat-exams">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="--stat-color: #f59e0b; --stat-bg: rgba(245,158,11,0.12)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Ujian Dikerjakan</div>
+            <div class="stat-value" id="admin-stat-results">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Hasil Ujian Semua Siswa
+          </h3>
+        </div>
+        <div id="admin-all-results" class="admin-list"></div>
+      </div>
+    </section>
+
+    <!-- ===== ADMIN: MODERASI ===== -->
+    <section id="section-admin-moderation" class="app-section">
+      <div class="page-header">
+        <div>
+          <h1>Moderasi Konten</h1>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchModTab('confessions')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Confession
+        </button>
+        <button class="tab-btn" onclick="switchModTab('users')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Kelola User
+        </button>
+      </div>
+      <div id="mod-confessions-panel" class="tab-panel">
+        <div id="admin-confessions-list" class="admin-list"></div>
+      </div>
+      <div id="mod-users-panel" class="tab-panel hidden">
+        <div id="admin-users-list" class="admin-list"></div>
+      </div>
+    </section>
+
+    <!-- ===== ADMIN: BROADCAST ===== -->
+    <section id="section-admin-broadcast" class="app-section">
+      <div class="page-header">
+        <div>
+          <h1>Broadcast Pengumuman</h1>
+        </div>
+      </div>
+      <div class="card">
+        <div class="form-group">
+          <label>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
+            Judul Pengumuman
+          </label>
+          <input type="text" id="broadcast-title" class="input" placeholder="Judul singkat..." />
+        </div>
+        <div class="form-group">
+          <label>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Pesan
+          </label>
+          <textarea id="broadcast-message" class="input textarea" placeholder="Isi pengumuman..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="sendBroadcast()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Kirim Broadcast
+        </button>
+      </div>
+      <div class="card" style="margin-top:1.5rem;">
+        <div class="card-header">
+          <h3>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            Riwayat Broadcast
+          </h3>
+        </div>
+        <div id="broadcast-history" class="admin-list"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ======================== MODALS ======================== -->
+
+<!-- Modal Add Subject -->
+<div id="modal-add-subject" class="modal-overlay hidden">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-add-subject')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h2 id="modal-subject-title">Tambah Mata Pelajaran</h2>
+    <input type="hidden" id="edit-subject-id" />
+    <div class="form-group">
+      <label>Nama Mata Pelajaran</label>
+      <input type="text" id="subject-name-input" class="input" placeholder="Contoh: Matematika" />
+    </div>
+    <div class="form-group">
+      <label>Deskripsi</label>
+      <textarea id="subject-desc-input" class="input textarea" placeholder="Deskripsi singkat..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Kisi-Kisi / Materi (Markdown didukung)</label>
+      <textarea id="subject-kisi-input" class="input textarea tall" placeholder="Tulis kisi-kisi atau materi belajar di sini..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Durasi Ujian (menit)</label>
+      <input type="number" id="subject-duration-input" class="input" placeholder="60" min="5" max="180" />
+    </div>
+
+    <!-- LOCK SETTINGS -->
+    <div class="form-group lock-settings-group">
+      <label>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Status Akses Mapel
+      </label>
+      <div class="lock-mode-tabs">
+        <button type="button" class="lock-tab active" data-mode="open" onclick="setLockMode('open', this)">🔓 Terbuka</button>
+        <button type="button" class="lock-tab" data-mode="locked" onclick="setLockMode('locked', this)">🔒 Dikunci</button>
+        <button type="button" class="lock-tab" data-mode="scheduled" onclick="setLockMode('scheduled', this)">⏰ Jadwal</button>
+      </div>
+      <input type="hidden" id="subject-lock-mode" value="open" />
+    </div>
+    <div id="lock-schedule-fields" class="form-row hidden">
+      <div class="form-group">
+        <label>Buka Pada</label>
+        <input type="datetime-local" id="subject-open-at" class="input" />
+      </div>
+      <div class="form-group">
+        <label>Tutup Pada (opsional)</label>
+        <input type="datetime-local" id="subject-close-at" class="input" />
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-subject')">Batal</button>
+      <button class="btn btn-primary" onclick="saveSubject()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+        Simpan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Add Question -->
+<div id="modal-add-question" class="modal-overlay hidden">
+  <div class="modal-box modal-lg">
+    <button class="modal-close" onclick="closeModal('modal-add-question')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h2 id="modal-question-title">Tambah Soal</h2>
+    <input type="hidden" id="edit-question-id" />
+    <div class="form-group">
+      <label>Mata Pelajaran</label>
+      <select id="question-subject-select" class="input">
+        <option value="">Pilih Mata Pelajaran</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Tipe Soal</label>
+      <select id="question-type-select" class="input" onchange="updateQuestionForm()">
+        <option value="pg">Pilihan Ganda (PG)</option>
+        <option value="pgk">Pilihan Ganda Kompleks (PGK)</option>
+        <option value="isian">Isian / Essay</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Pertanyaan</label>
+      <textarea id="question-text-input" class="input textarea" placeholder="Tulis pertanyaan di sini..."></textarea>
+    </div>
+    <div id="options-section">
+      <div class="form-group">
+        <label>Pilihan Jawaban</label>
+        <div id="options-list">
+          <div class="option-row"><span class="option-label">A</span><input type="text" class="input" id="opt-a" placeholder="Pilihan A" /></div>
+          <div class="option-row"><span class="option-label">B</span><input type="text" class="input" id="opt-b" placeholder="Pilihan B" /></div>
+          <div class="option-row"><span class="option-label">C</span><input type="text" class="input" id="opt-c" placeholder="Pilihan C" /></div>
+          <div class="option-row"><span class="option-label">D</span><input type="text" class="input" id="opt-d" placeholder="Pilihan D" /></div>
+        </div>
+      </div>
+      <div class="form-group" id="correct-answer-pg">
+        <label>Jawaban Benar (PG)</label>
+        <select id="correct-pg" class="input">
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+      </div>
+      <div class="form-group hidden" id="correct-answer-pgk">
+        <label>Jawaban Benar (PGK - bisa lebih dari 1)</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" value="A" name="pgk-ans"> A</label>
+          <label><input type="checkbox" value="B" name="pgk-ans"> B</label>
+          <label><input type="checkbox" value="C" name="pgk-ans"> C</label>
+          <label><input type="checkbox" value="D" name="pgk-ans"> D</label>
+        </div>
+      </div>
+    </div>
+    <div class="form-group hidden" id="isian-answer-section">
+      <label>Kunci Jawaban (Isian)</label>
+      <input type="text" id="isian-answer" class="input" placeholder="Jawaban yang diterima..." />
+    </div>
+    <div class="form-group">
+      <label>Poin</label>
+      <input type="number" id="question-points" class="input" value="10" min="1" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-question')">Batal</button>
+      <button class="btn btn-primary" onclick="saveQuestion()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+        Simpan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Result Detail -->
+<div id="modal-result" class="modal-overlay hidden">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-result')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="result-modal-content">
+      <div class="result-score-circle" id="result-score-circle">
+        <span id="result-score-val">0</span>
+        <small>Nilai</small>
+      </div>
+      <h2 id="result-exam-title">Nama Ujian</h2>
+      <p id="result-subject-name">Mata Pelajaran</p>
+      <div class="result-stats">
+        <div>
+          <span id="result-correct">0</span>
+          <small>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+            Benar
+          </small>
+        </div>
+        <div>
+          <span id="result-wrong">0</span>
+          <small>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Salah
+          </small>
+        </div>
+        <div>
+          <span id="result-total-q">0</span>
+          <small>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6c63ff" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Total
+          </small>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="closeModal('modal-result')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reply -->
+<div id="modal-reply" class="modal-overlay hidden">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-reply')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h3>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,17 4,12 9,7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+      Balas Komentar
+    </h3>
+    <div id="reply-parent-preview" class="reply-preview"></div>
+    <input type="hidden" id="reply-parent-id" />
+    <input type="text" id="reply-text" class="input" placeholder="Tulis balasan..." />
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-reply')">Batal</button>
+      <button class="btn btn-primary" onclick="submitReply()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg>
+        Balas
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -841,18 +841,58 @@
           Kirim Jawaban
         </button>
       </div>
-      <div id="cheat-warning" class="cheat-warning hidden">
-        <div class="cheat-warning-box">
-          <div class="cheat-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <h3>Peringatan!</h3>
-          <p>Kamu terdeteksi keluar dari halaman ujian.</p>
-          <p id="cheat-count-msg">Peringatan 1 dari 3</p>
-          <button class="btn btn-primary" onclick="dismissCheatWarning()">Kembali ke Ujian</button>
+      <!-- FULLSCREEN ENTRY PROMPT -->
+      <div id="fullscreen-prompt" class="fullscreen-prompt hidden">
+        <div class="fullscreen-prompt-box">
+          <div class="fullscreen-prompt-icon">🖥️</div>
+          <h3>Mode Ujian Ketat</h3>
+          <p>Ujian ini memerlukan mode layar penuh. Klik tombol di bawah untuk melanjutkan.</p>
+          <button class="btn btn-primary btn-xl" onclick="enterFullscreen()">Masuk Layar Penuh & Mulai Ujian</button>
         </div>
       </div>
     </section>
+
+    <!-- ===== ANTI-CHEAT OVERLAY (GLOBAL — di luar section) ===== -->
+    <div id="anticheat-overlay" class="anticheat-overlay hidden" aria-live="assertive">
+      <div class="anticheat-content">
+        <div class="anticheat-icon-wrap">
+          <svg class="anticheat-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="anticheat-badge" id="anticheat-violation-badge">PELANGGARAN #1</div>
+        <h1 class="anticheat-title">⚠️ PERINGATAN!</h1>
+        <p class="anticheat-subtitle">ANDA TERDETEKSI MELANGGAR</p>
+        <p class="anticheat-detail" id="anticheat-detail">Keluar dari halaman ujian terdeteksi</p>
+        <div class="anticheat-counter">
+          <span id="anticheat-count-display">1</span>
+          <span class="anticheat-counter-label">dari 3 pelanggaran</span>
+        </div>
+        <div class="anticheat-dots">
+          <div class="anticheat-dot active" id="dot-1"></div>
+          <div class="anticheat-dot" id="dot-2"></div>
+          <div class="anticheat-dot" id="dot-3"></div>
+        </div>
+        <p class="anticheat-warn-text" id="anticheat-warn-text">1 pelanggaran lagi = ujian dikunci</p>
+        <button class="anticheat-dismiss-btn" id="anticheat-dismiss-btn" onclick="dismissAntiCheatOverlay()">
+          Kembali ke Ujian
+        </button>
+      </div>
+    </div>
+
+    <!-- LOCKED OVERLAY (after 3 violations) -->
+    <div id="exam-locked-overlay" class="exam-locked-overlay hidden">
+      <div class="exam-locked-content">
+        <div class="exam-locked-icon">🚫</div>
+        <h1>UJIAN DIHENTIKAN</h1>
+        <p class="exam-locked-subtitle">STATUS: <span class="cheater-badge">TERINDIKASI CURANG</span></p>
+        <p>Anda telah melakukan 3 pelanggaran. Ujian telah dikunci dan jawaban otomatis dikumpulkan.</p>
+        <p class="exam-locked-meta" id="exam-locked-meta">Waktu: — | Pelanggaran: 3</p>
+        <button class="btn btn-secondary" onclick="exitLockedExam()">Kembali ke Dashboard</button>
+      </div>
+    </div>
 
     <!-- ===== HASIL UJIAN ===== -->
     <section id="section-results" class="app-section">
@@ -1008,12 +1048,55 @@
     <section id="section-admin-monitor" class="app-section">
       <div class="page-header">
         <div>
-          <h1>Monitoring Hasil</h1>
-          <p>Lihat semua hasil ujian seluruh pengguna</p>
+          <h1>Monitoring & Anti-Cheat</h1>
+          <p>Pantau ujian & deteksi kecurangan secara realtime</p>
         </div>
       </div>
-      <div id="admin-results-list" class="admin-list">
-        <div class="skeleton-card"></div><div class="skeleton-card"></div>
+
+      <!-- Stats Row -->
+      <div class="monitor-stats-grid">
+        <div class="monitor-stat-card">
+          <div class="monitor-stat-icon">👥</div>
+          <div class="monitor-stat-val" id="admin-stat-students">0</div>
+          <div class="monitor-stat-label">Total Siswa</div>
+        </div>
+        <div class="monitor-stat-card">
+          <div class="monitor-stat-icon">📚</div>
+          <div class="monitor-stat-val" id="admin-stat-exams">0</div>
+          <div class="monitor-stat-label">Mata Pelajaran</div>
+        </div>
+        <div class="monitor-stat-card">
+          <div class="monitor-stat-icon">📝</div>
+          <div class="monitor-stat-val" id="admin-stat-results">0</div>
+          <div class="monitor-stat-label">Ujian Selesai</div>
+        </div>
+        <div class="monitor-stat-card danger">
+          <div class="monitor-stat-icon">🚨</div>
+          <div class="monitor-stat-val" id="admin-stat-cheaters">0</div>
+          <div class="monitor-stat-label">Terindikasi Curang</div>
+        </div>
+      </div>
+
+      <!-- Anti-Cheat Live Panel -->
+      <div class="card" style="margin-bottom:1.5rem">
+        <div class="monitor-panel-header">
+          <h3>
+            <span class="live-dot"></span>
+            Deteksi Kecurangan Realtime
+          </h3>
+          <button class="btn btn-ghost btn-sm" onclick="loadAdminMonitor()">🔄 Refresh</button>
+        </div>
+        <div id="anticheat-monitor-list" class="anticheat-monitor-list">
+          <div class="empty-state"><p>Belum ada data pelanggaran</p></div>
+        </div>
+      </div>
+
+      <!-- Hasil Ujian -->
+      <div class="card">
+        <h3 style="margin-bottom:1rem">📋 Riwayat Hasil Ujian</h3>
+        <div id="admin-all-results" class="admin-list">
+          <div class="skeleton-card"></div><div class="skeleton-card"></div>
+        </div>
       </div>
     </section>
 

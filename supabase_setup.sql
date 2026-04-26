@@ -189,3 +189,31 @@ alter publication supabase_realtime add table public.leaderboard;
 alter publication supabase_realtime add table public.anonymous_messages;
 alter publication supabase_realtime add table public.confession_replies;
 alter publication supabase_realtime add table public.comments;
+
+-- ─────────────────────────────────────────────────────────
+--  EXAM VIOLATIONS LOG (Anti-Cheat v2)
+-- ─────────────────────────────────────────────────────────
+create table if not exists public.exam_violations (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid references public.users(id) on delete cascade,
+  subject_id      uuid references public.subjects(id) on delete set null,
+  violation_count int  default 0,
+  violation_log   jsonb default '[]',   -- [{type, timestamp, device}]
+  tab_switch_count int default 0,
+  status          text default 'aman',  -- 'aman' | 'peringatan' | 'curang'
+  device_info     jsonb,
+  created_at      timestamp with time zone default now(),
+  updated_at      timestamp with time zone default now()
+);
+alter table public.exam_violations enable row level security;
+create policy "Violations: own read"   on public.exam_violations for select using (auth.uid() = user_id or
+  exists (select 1 from public.users where id = auth.uid() and role = 'admin'));
+create policy "Violations: own insert" on public.exam_violations for insert with check (auth.uid() = user_id);
+create policy "Violations: own update" on public.exam_violations for update using (auth.uid() = user_id);
+
+-- Enable realtime for violations
+alter publication supabase_realtime add table public.exam_violations;
+
+-- Results: add cheat_status column
+alter table public.results add column if not exists cheat_status text default 'normal'; -- 'normal' | 'curang'
+alter table public.results add column if not exists violation_count int default 0;

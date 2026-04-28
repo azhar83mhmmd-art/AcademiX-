@@ -369,6 +369,13 @@ function updateSidebarUser() {
 
   const adminNav = document.getElementById('admin-nav');
   if (adminNav) adminNav.classList.toggle('hidden', currentUser.role !== 'admin');
+
+  // Admin bypass: if logged-in user is admin, suppress shutdown overlay
+  if (currentUser.role === 'admin') {
+    window.__sdAdminMode = true;   // shutdown-controller.js checks this flag
+    const overlay = document.getElementById('sx-overlay');
+    if (overlay) { overlay.style.display = 'none'; overlay.classList.remove('sx-on'); }
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -388,6 +395,7 @@ const pageMap = {
   'admin-monitor':     'section-admin-monitor',
   'admin-moderation':  'section-admin-moderation',
   'admin-broadcast':   'section-admin-broadcast',
+  'admin-sitecontrol': 'section-admin-sitecontrol',
 };
 
 const pageTitles = {
@@ -395,7 +403,8 @@ const pageTitles = {
   exams: 'Ujian', 'exam-room': 'Ujian Berlangsung', results: 'Hasil Ujian',
   leaderboard: 'Leaderboard', social: 'Sosial',
   'admin-subjects': 'Kelola Mapel', 'admin-questions': 'Kelola Soal',
-  'admin-monitor': 'Monitoring', 'admin-moderation': 'Moderasi', 'admin-broadcast': 'Broadcast',
+  'admin-monitor': 'Monitoring', 'admin-moderation': 'Moderasi',
+  'admin-broadcast': 'Broadcast', 'admin-sitecontrol': 'Site Control',
 };
 
 async function navigate(page) {
@@ -431,6 +440,7 @@ async function navigate(page) {
     'admin-monitor':     loadAdminMonitor,
     'admin-moderation':  loadAdminModeration,
     'admin-broadcast':   loadAdminBroadcast,
+    'admin-sitecontrol': loadAdminSiteControl,
   };
   if (loaders[page]) await loaders[page]();
 }
@@ -800,467 +810,35 @@ function endExam(save = false) {
   else navigate('dashboard');
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ANTI-CHEAT SYSTEM v2 — UPGRADED
-   Terpusat, responsif, suara, fullscreen, 3-violation limit
-   ═══════════════════════════════════════════════════════════ */
-
-/* ── AUDIO ENGINE ──────────────────────────────────────────
-   Gunakan Web Audio API untuk alarm tanpa file eksternal    */
-let _audioCtx = null;
-function getAudioCtx() {
-  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  return _audioCtx;
-}
-
-function playAlarmSound(level = 1) {
-  // level: 1 = satu beep keras, 2 = double beep lebih lama, 3 = triple alarm
-  try {
-    const ctx  = getAudioCtx();
-    if (ctx.state === 'suspended') ctx.resume();
-    const beeps = level === 1 ? 1 : level === 2 ? 2 : 3;
-    for (let i = 0; i < beeps; i++) {
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      const freq = level === 3 ? 880 : 660;
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.45);
-      osc.frequency.setValueAtTime(freq * 1.2, ctx.currentTime + i * 0.45 + 0.1);
-      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.45);
-      gain.gain.linearRampToValueAtTime(0.9, ctx.currentTime + i * 0.45 + 0.01);
-      gain.gain.setValueAtTime(0.9, ctx.currentTime + i * 0.45 + 0.25);
-      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.45 + 0.4);
-      osc.start(ctx.currentTime + i * 0.45);
-      osc.stop(ctx.currentTime + i * 0.45 + 0.45);
-    }
-  } catch(e) { console.warn('Audio error:', e); }
-}
-
-/* ── VIOLATION STATE ───────────────────────────────────────  */
-let violationCount    = 0;
-let violationLog      = [];   // [{type, timestamp, device}]
-let tabSwitchCount    = 0;
-let overlayDismissable = true;
-let violationDbId     = null; // UUID row di exam_violations
-let _acListeners      = {};   // store listeners untuk cleanup
-
-const VIOLATION_TYPES = {
-  TAB_SWITCH:   'Tab Switching (keluar dari tab ujian)',
-  WINDOW_BLUR:  'Window Blur (keluar dari window)',
-  FULLSCREEN:   'Keluar dari mode fullscreen',
-  COPY:         'Mencoba menyalin teks (CTRL+C)',
-  PASTE:        'Mencoba menempel teks (CTRL+V)',
-  RIGHT_CLICK:  'Klik kanan terdeteksi',
-};
-
-/* ── DEVICE INFO ───────────────────────────────────────────  */
-function getDeviceInfo() {
-  return {
-    ua:        navigator.userAgent.slice(0, 120),
-    platform:  navigator.platform,
-    screen:    `${screen.width}x${screen.height}`,
-    mobile:    /Mobi|Android/i.test(navigator.userAgent),
-    lang:      navigator.language,
-  };
-}
-
-/* ── SETUP ANTI-CHEAT ──────────────────────────────────────  */
+/* ── ANTI-CHEAT ── */
 function setupAntiCheat() {
-  // Reset state
-  violationCount     = 0;
-  violationLog       = [];
-  tabSwitchCount     = 0;
-  overlayDismissable = true;
-  violationDbId      = null;
-
-  // Register violation row ke Supabase
-  _registerViolationRow();
-
-  // ── 1. Tab switching
-  _acListeners.visibility = () => {
-    if (document.hidden && examState.examActive) {
-      tabSwitchCount++;
-      recordViolation('TAB_SWITCH');
-    }
-  };
-  document.addEventListener('visibilitychange', _acListeners.visibility);
-
-  // ── 2. Window blur
-  _acListeners.blur = () => {
-    if (examState.examActive) recordViolation('WINDOW_BLUR');
-  };
-  window.addEventListener('blur', _acListeners.blur);
-
-  // ── 3. Fullscreen keluar
-  _acListeners.fullscreenChange = () => {
-    const isFullscreen = !!(
-      document.fullscreenElement ||
-      document.webkitFullscreenElement ||
-      document.mozFullScreenElement
-    );
-    if (!isFullscreen && examState.examActive) recordViolation('FULLSCREEN');
-  };
-  document.addEventListener('fullscreenchange',       _acListeners.fullscreenChange);
-  document.addEventListener('webkitfullscreenchange', _acListeners.fullscreenChange);
-  document.addEventListener('mozfullscreenchange',    _acListeners.fullscreenChange);
-
-  // ── 4. Keyboard: blok CTRL+C, CTRL+V, CTRL+U
-  _acListeners.keydown = (e) => {
-    if (!examState.examActive) return;
-    if (e.ctrlKey || e.metaKey) {
-      if (e.key === 'c' || e.key === 'C') { e.preventDefault(); recordViolation('COPY'); }
-      if (e.key === 'v' || e.key === 'V') { e.preventDefault(); recordViolation('PASTE'); }
-      if (e.key === 'u' || e.key === 'U') { e.preventDefault(); }
-      if (e.key === 's' || e.key === 'S') { e.preventDefault(); }
-    }
-    // F-keys yang berbahaya
-    if (e.key === 'F12') e.preventDefault();
-  };
-  document.addEventListener('keydown', _acListeners.keydown);
-
-  // ── 5. Klik kanan
-  _acListeners.contextmenu = (e) => {
-    if (!examState.examActive) return;
-    e.preventDefault();
-    recordViolation('RIGHT_CLICK');
-  };
-  document.addEventListener('contextmenu', _acListeners.contextmenu);
-
-  // ── 6. Copy/paste event
-  _acListeners.copy = (e) => {
-    if (!examState.examActive) return;
-    e.preventDefault();
-    recordViolation('COPY');
-  };
-  _acListeners.paste = (e) => {
-    if (!examState.examActive) return;
-    e.preventDefault();
-    recordViolation('PASTE');
-  };
-  document.addEventListener('copy',  _acListeners.copy);
-  document.addEventListener('paste', _acListeners.paste);
-
-  // ── Minta Fullscreen
-  requestFullscreenForExam();
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('blur', handleWindowBlur);
 }
-
 function removeAntiCheat() {
-  document.removeEventListener('visibilitychange',       _acListeners.visibility       || (()=>{}));
-  window  .removeEventListener('blur',                   _acListeners.blur             || (()=>{}));
-  document.removeEventListener('fullscreenchange',       _acListeners.fullscreenChange || (()=>{}));
-  document.removeEventListener('webkitfullscreenchange', _acListeners.fullscreenChange || (()=>{}));
-  document.removeEventListener('mozfullscreenchange',    _acListeners.fullscreenChange || (()=>{}));
-  document.removeEventListener('keydown',                _acListeners.keydown          || (()=>{}));
-  document.removeEventListener('contextmenu',            _acListeners.contextmenu      || (()=>{}));
-  document.removeEventListener('copy',                   _acListeners.copy             || (()=>{}));
-  document.removeEventListener('paste',                  _acListeners.paste            || (()=>{}));
-  _acListeners = {};
-
-  // Keluar fullscreen
-  try {
-    if (document.exitFullscreen)       document.exitFullscreen();
-    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-  } catch(e) {}
-
-  // Remove blur mode
-  document.getElementById('section-exam-room')?.classList.remove('exam-blur-mode');
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
+  window.removeEventListener('blur', handleWindowBlur);
 }
+function handleVisibilityChange() { if (document.hidden && examState.examActive) triggerCheatWarning(); }
+function handleWindowBlur()       { if (examState.examActive) triggerCheatWarning(); }
 
-/* ── FULLSCREEN ─────────────────────────────────────────────  */
-function requestFullscreenForExam() {
-  const el = document.documentElement;
-  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
-  if (req) {
-    req.call(el).catch(() => {
-      // User menolak atau tidak bisa — tampilkan prompt
-      const prompt = document.getElementById('fullscreen-prompt');
-      if (prompt) prompt.classList.remove('hidden');
-    });
-  }
-}
-
-function enterFullscreen() {
-  const el = document.documentElement;
-  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
-  if (req) {
-    req.call(el).then(() => {
-      document.getElementById('fullscreen-prompt')?.classList.add('hidden');
-    }).catch(() => {
-      showToast('Tidak bisa masuk layar penuh di perangkat ini', 'error');
-      document.getElementById('fullscreen-prompt')?.classList.add('hidden');
-    });
-  } else {
-    document.getElementById('fullscreen-prompt')?.classList.add('hidden');
-  }
-}
-
-/* ── RECORD VIOLATION ───────────────────────────────────────  */
-function recordViolation(type) {
-  if (!examState.examActive) return;
-  // Debounce: hindari double-trigger dalam 1 detik
-  const now = Date.now();
-  if (recordViolation._lastTime && now - recordViolation._lastTime < 800) return;
-  recordViolation._lastTime = now;
-
-  violationCount++;
-  const entry = {
-    type,
-    label: VIOLATION_TYPES[type] || type,
-    timestamp: new Date().toISOString(),
-    device: getDeviceInfo(),
-  };
-  violationLog.push(entry);
-
-  // Simpan ke Supabase async (tidak blocking)
-  _updateViolationDb();
-
-  // Putar suara
-  playAlarmSound(violationCount);
-
-  // Tampilkan overlay sesuai level
-  _showViolationOverlay(violationCount, entry.label);
-}
-
-/* ── VIOLATION OVERLAY ──────────────────────────────────────  */
-function _showViolationOverlay(count, detail) {
-  const overlay = document.getElementById('anticheat-overlay');
-  if (!overlay) return;
-
-  // Update konten
-  const badge  = document.getElementById('anticheat-violation-badge');
-  const cntEl  = document.getElementById('anticheat-count-display');
-  const detEl  = document.getElementById('anticheat-detail');
-  const warnEl = document.getElementById('anticheat-warn-text');
-  const dimBtn = document.getElementById('anticheat-dismiss-btn');
-
-  if (badge)  badge.textContent  = `PELANGGARAN #${count}`;
-  if (cntEl)  cntEl.textContent  = count;
-  if (detEl)  detEl.textContent  = detail;
-
-  // Update dots
-  for (let i = 1; i <= 3; i++) {
-    const dot = document.getElementById(`dot-${i}`);
-    if (dot) dot.classList.toggle('active', i <= count);
-  }
-
-  if (count === 1) {
-    if (warnEl) warnEl.textContent = '⚠️ Peringatan! 2 pelanggaran lagi maka ujian dikunci otomatis';
-    if (dimBtn) { dimBtn.textContent = 'Kembali ke Ujian'; dimBtn.disabled = false; }
-    overlayDismissable = true;
-    document.getElementById('section-exam-room')?.classList.remove('exam-blur-mode');
-  } else if (count === 2) {
-    if (warnEl) warnEl.textContent = '🔴 PERINGATAN AKHIR! 1 pelanggaran lagi = AUTO SUBMIT + DIKUNCI';
-    if (dimBtn) { dimBtn.textContent = 'Kembali ke Ujian (Ini Kesempatan Terakhir)'; dimBtn.disabled = false; }
-    overlayDismissable = true;
-    // Level 2: blur konten ujian sebagai sanksi
-    document.getElementById('section-exam-room')?.classList.add('exam-blur-mode');
-  } else {
-    // count >= 3 → LOCK
-    if (warnEl) warnEl.textContent = '🚫 Ujian otomatis dikumpulkan';
-    if (dimBtn) { dimBtn.textContent = 'Ujian Dikunci'; dimBtn.disabled = true; }
-    overlayDismissable = false;
-  }
-
-  // Tampilkan overlay (paksa animasi ulang)
-  overlay.classList.remove('hidden');
-  overlay.style.animation = 'none';
-  requestAnimationFrame(() => {
-    overlay.style.animation = '';
-  });
-
-  // Jika 3 pelanggaran → auto submit setelah 3 detik
-  if (count >= 3) {
+function triggerCheatWarning() {
+  examState.cheatCount++;
+  const msg = document.getElementById('cheat-count-msg');
+  if (msg) msg.textContent = `Peringatan ${examState.cheatCount} dari 3`;
+  document.getElementById('cheat-warning')?.classList.remove('hidden');
+  if (examState.cheatCount >= 3) {
+    examState.examActive = false;
+    clearInterval(examState.timerInterval);
+    removeAntiCheat();
     setTimeout(() => {
-      overlay.classList.add('hidden');
-      _triggerAutoSubmit();
-    }, 3000);
+      document.getElementById('cheat-warning')?.classList.add('hidden');
+      navigate('dashboard');
+      showToast('Ujian dihentikan karena kecurangan terdeteksi.', 'error');
+    }, 2000);
   }
 }
-
-function dismissAntiCheatOverlay() {
-  if (!overlayDismissable) return;
-  document.getElementById('anticheat-overlay')?.classList.add('hidden');
-  // Level 2 tetap blur sampai ujian selesai
-}
-
-/* ── AUTO SUBMIT (3 pelanggaran) ────────────────────────────  */
-async function _triggerAutoSubmit() {
-  examState.examActive = false;
-  clearInterval(examState.timerInterval);
-  removeAntiCheat();
-
-  // Update status ke curang di DB
-  await _finalizeViolationDb('curang');
-
-  // Tampilkan locked overlay
-  const lockedEl = document.getElementById('exam-locked-overlay');
-  const metaEl   = document.getElementById('exam-locked-meta');
-  if (metaEl) metaEl.textContent =
-    `Waktu: ${formatDate(new Date().toISOString())} | Pelanggaran: ${violationCount}`;
-  if (lockedEl) lockedEl.classList.remove('hidden');
-
-  // Auto submit jawaban dengan status curang
-  await _submitWithCheatStatus();
-}
-
-async function _submitWithCheatStatus() {
-  const questions = examState.questions;
-  let correct = 0, total = 0;
-  questions.forEach((q, i) => {
-    const ans = examState.answers[i];
-    total++;
-    if (q.type === 'pg' && ans === q.correct_answer) correct++;
-    else if (q.type === 'pgk') {
-      const ca = (q.correct_answers || []).sort().join(',');
-      const ua = (ans || []).sort().join(',');
-      if (ca === ua) correct++;
-    } else if (q.type === 'isian') {
-      if (ans?.toLowerCase().trim() === q.correct_answer?.toLowerCase().trim()) correct++;
-    }
-  });
-  const score = total > 0 ? Math.round((correct / total) * 100) : 0;
-  await db.from('results').insert({
-    user_id: currentUser.id,
-    subject_id: examState.exam.subject_id,
-    score, correct, wrong: total - correct, total_questions: total,
-    answers: examState.answers,
-    cheat_status: 'curang',
-    violation_count: violationCount,
-  });
-  await updateLeaderboard();
-}
-
-function exitLockedExam() {
-  document.getElementById('exam-locked-overlay')?.classList.add('hidden');
-  navigate('dashboard');
-}
-
-/* ── SUPABASE VIOLATION TRACKING ────────────────────────────  */
-async function _registerViolationRow() {
-  try {
-    const { data, error } = await db.from('exam_violations').insert({
-      user_id:    currentUser.id,
-      subject_id: examState.exam?.subject_id || null,
-      violation_count: 0,
-      violation_log:   [],
-      tab_switch_count: 0,
-      status:     'aman',
-      device_info: getDeviceInfo(),
-    }).select().single();
-    if (!error && data) violationDbId = data.id;
-  } catch(e) { console.warn('Violation DB register:', e); }
-}
-
-async function _updateViolationDb() {
-  if (!violationDbId) return;
-  const status = violationCount >= 3 ? 'curang' : violationCount >= 1 ? 'peringatan' : 'aman';
-  try {
-    await db.from('exam_violations').update({
-      violation_count:  violationCount,
-      violation_log:    violationLog,
-      tab_switch_count: tabSwitchCount,
-      status,
-      updated_at: new Date().toISOString(),
-    }).eq('id', violationDbId);
-  } catch(e) { console.warn('Violation DB update:', e); }
-}
-
-async function _finalizeViolationDb(status) {
-  if (!violationDbId) return;
-  try {
-    await db.from('exam_violations').update({
-      violation_count:  violationCount,
-      violation_log:    violationLog,
-      tab_switch_count: tabSwitchCount,
-      status,
-      updated_at: new Date().toISOString(),
-    }).eq('id', violationDbId);
-  } catch(e) {}
-}
-
-/* ── ADMIN MONITOR — LOAD ───────────────────────────────────  */
-async function loadAdminMonitor() {
-  const [
-    { count: students },
-    { count: subjects },
-    { count: results },
-    { data: allResults },
-    { data: violations },
-  ] = await Promise.all([
-    db.from('users').select('*', { count: 'exact', head: true }).eq('role', 'siswa'),
-    db.from('subjects').select('*', { count: 'exact', head: true }),
-    db.from('results').select('*', { count: 'exact', head: true }),
-    db.from('results').select('*, users(username), subjects(name)')
-      .order('created_at', { ascending: false }).limit(50),
-    db.from('exam_violations').select('*, users(username, email), subjects(name)')
-      .order('updated_at', { ascending: false }).limit(100),
-  ]);
-
-  const cheaterCount = violations?.filter(v => v.status === 'curang').length || 0;
-
-  const setEl = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
-  setEl('admin-stat-students', students || 0);
-  setEl('admin-stat-exams',    subjects || 0);
-  setEl('admin-stat-results',  results  || 0);
-  setEl('admin-stat-cheaters', cheaterCount);
-
-  // Anti-cheat list
-  const acEl = document.getElementById('anticheat-monitor-list');
-  if (acEl) {
-    if (!violations?.length) {
-      acEl.innerHTML = '<div class="empty-state"><p>Belum ada data pelanggaran</p></div>';
-    } else {
-      acEl.innerHTML = violations.map(v => {
-        const cls = v.status === 'curang' ? 'cheater' : v.status === 'peringatan' ? 'warning' : '';
-        const vCls = v.violation_count >= 3 ? 'vbadge-3' : v.violation_count >= 2 ? 'vbadge-2' : v.violation_count >= 1 ? 'vbadge-1' : 'vbadge-0';
-        const statusCls  = v.status === 'curang' ? 'status-curang' : v.status === 'peringatan' ? 'status-warning' : 'status-aman';
-        const statusText = v.status === 'curang' ? '🚫 CURANG' : v.status === 'peringatan' ? '⚠️ PERINGATAN' : '✅ Aman';
-        const initial    = (v.users?.username || '?')[0].toUpperCase();
-        const lastViolation = v.violation_log?.length
-          ? v.violation_log[v.violation_log.length - 1]?.label || '-'
-          : '-';
-        return `<div class="anticheat-monitor-item ${cls}">
-          <div class="monitor-user-avatar">${initial}</div>
-          <div class="monitor-user-info">
-            <div class="monitor-user-name">${v.users?.username || 'Unknown'}</div>
-            <div class="monitor-user-meta">${v.subjects?.name || '-'} · ${v.violation_log?.length ? 'Terakhir: ' + lastViolation : 'Belum ada pelanggaran'} · Tab switch: ${v.tab_switch_count || 0}x</div>
-          </div>
-          <div class="monitor-violation-badge ${vCls}">
-            ${v.violation_count}/3
-          </div>
-          <div class="monitor-status-pill ${statusCls}">${statusText}</div>
-        </div>`;
-      }).join('');
-    }
-  }
-
-  // Hasil ujian
-  const el = document.getElementById('admin-all-results');
-  if (!el) return;
-  if (!allResults?.length) {
-    el.innerHTML = '<div class="empty-state"><p>Belum ada hasil ujian.</p></div>'; return;
-  }
-  el.innerHTML = allResults.map(r => `
-    <div class="admin-item">
-      <div class="admin-item-info">
-        <h4>${r.users?.username || 'User'} · ${r.subjects?.name || '-'}
-          ${r.cheat_status === 'curang' ? '<span class="cheater-badge" style="font-size:0.65rem;margin-left:6px">CURANG</span>' : ''}
-        </h4>
-        <p>${formatDate(r.created_at)} · ${r.correct}/${r.total_questions} benar
-          ${r.violation_count ? ` · ${r.violation_count} pelanggaran` : ''}
-        </p>
-      </div>
-      <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:${scoreColorHex(r.score)}">${r.score}</div>
-    </div>`).join('');
-}
-
-/* ── LEGACY COMPAT (dipanggil dari HTML lama) ───────────────  */
-function handleVisibilityChange() {} // replaced by setupAntiCheat
-function handleWindowBlur()       {} // replaced by setupAntiCheat
-function triggerCheatWarning()    {} // replaced by recordViolation
-function dismissCheatWarning()    { dismissAntiCheatOverlay(); }
+function dismissCheatWarning() { document.getElementById('cheat-warning')?.classList.add('hidden'); }
 
 /* ─────────────────────────────────────────────────────────────
    RESULTS
@@ -1822,6 +1400,32 @@ async function deleteQuestion(id) {
 /* ─────────────────────────────────────────────────────────────
    ADMIN — MONITORING
    ───────────────────────────────────────────────────────────── */
+async function loadAdminMonitor() {
+  const [{ count: students }, { count: subjects }, { count: results }, { data: allResults }] = await Promise.all([
+    db.from('users').select('*', { count: 'exact', head: true }).eq('role', 'siswa'),
+    db.from('subjects').select('*', { count: 'exact', head: true }),
+    db.from('results').select('*', { count: 'exact', head: true }),
+    db.from('results').select('*, users(username), subjects(name)').order('created_at', { ascending: false }).limit(50),
+  ]);
+
+  const setEl = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+  setEl('admin-stat-students', students || 0);
+  setEl('admin-stat-exams',    subjects || 0);
+  setEl('admin-stat-results',  results  || 0);
+
+  const el = document.getElementById('admin-all-results');
+  if (!el) return;
+  if (!allResults?.length) { el.innerHTML = '<div class="empty-state"><p>Belum ada hasil ujian.</p></div>'; return; }
+  el.innerHTML = allResults.map(r => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        <h4>${r.users?.username || 'User'} &bull; ${r.subjects?.name || '-'}</h4>
+        <p>${formatDate(r.created_at)} &bull; ${r.correct}/${r.total_questions} benar</p>
+      </div>
+      <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:${scoreColorHex(r.score)}">${r.score}</div>
+    </div>`).join('');
+}
+
 /* ─────────────────────────────────────────────────────────────
    ADMIN — MODERATION
    ───────────────────────────────────────────────────────────── */
@@ -1958,16 +1562,6 @@ function setupRealtimeListeners() {
     }).subscribe();
 
   realtimeChannels = [broadcastCh, lbCh, socialCh];
-
-  // Realtime pelanggaran untuk admin
-  if (currentUser?.role === 'admin') {
-    const violationCh = db.channel('violations-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'exam_violations' }, () => {
-        const monEl = document.getElementById('section-admin-monitor');
-        if (monEl?.classList.contains('active')) loadAdminMonitor();
-      }).subscribe();
-    realtimeChannels.push(violationCh);
-  }
 }
 
 function cleanupRealtime() {
@@ -2030,6 +1624,195 @@ function debounceSearch(val, type) {
   searchDebounceTimer = setTimeout(() => {
     if (type === 'subjects') loadSubjects(val);
   }, 300);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ADMIN — SITE CONTROL
+   ───────────────────────────────────────────────────────────── */
+const SC_STORAGE_KEY   = 'academix_shutdown';
+const SC_COUNTDOWN_SEC = 20;
+let   scLogItems       = [];
+let   scPollTimer      = null;
+
+function scGetState() {
+  try { return JSON.parse(localStorage.getItem(SC_STORAGE_KEY)) || {}; } catch { return {}; }
+}
+function scSetState(obj) {
+  localStorage.setItem(SC_STORAGE_KEY, JSON.stringify(obj));
+}
+function scClearState() {
+  localStorage.removeItem(SC_STORAGE_KEY);
+}
+
+function scFmtDuration(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}j ${m % 60}m`;
+  if (m > 0) return `${m}m ${s % 60}s`;
+  return `${s}s`;
+}
+
+function scAddLog(msg, type = 'info') {
+  const now = new Date().toLocaleTimeString('id-ID', { hour12: false });
+  scLogItems.unshift({ msg, type, time: now });
+  if (scLogItems.length > 50) scLogItems.pop();
+  scRenderLog();
+}
+
+function scRenderLog() {
+  const el = document.getElementById('sc-log-body');
+  if (!el) return;
+  if (!scLogItems.length) {
+    el.innerHTML = '<div class="sc-log-empty">Belum ada aktivitas.</div>';
+    return;
+  }
+  el.innerHTML = scLogItems.map(l => `
+    <div class="sc-log-item sc-log-${l.type}">
+      <span class="sc-log-time">${l.time}</span>
+      <span class="sc-log-msg">${escapeHTML(l.msg)}</span>
+    </div>`).join('');
+}
+
+function scClearLog() {
+  scLogItems = [];
+  scRenderLog();
+}
+
+function scUpdateUI() {
+  const state   = scGetState();
+  const active  = !!state.isShutdown;
+
+  /* Header pill */
+  const pillEl   = document.getElementById('sc-header-pill');
+  const pillDot  = document.getElementById('sc-pill-dot');
+  const pillText = document.getElementById('sc-pill-text');
+  if (pillEl && pillDot && pillText) {
+    if (active) {
+      pillEl.style.background   = 'rgba(239,68,68,0.12)';
+      pillEl.style.borderColor  = 'rgba(239,68,68,0.28)';
+      pillEl.style.color        = '#f87171';
+      pillDot.style.background  = '#ef4444';
+      pillDot.style.boxShadow   = '0 0 6px #ef4444';
+      pillText.textContent      = 'Website Offline';
+    } else {
+      pillEl.style.background   = 'rgba(34,197,94,0.12)';
+      pillEl.style.borderColor  = 'rgba(34,197,94,0.28)';
+      pillEl.style.color        = '#22c55e';
+      pillDot.style.background  = '#22c55e';
+      pillDot.style.boxShadow   = '0 0 6px #22c55e';
+      pillText.textContent      = 'Website Online';
+    }
+  }
+
+  /* Ctrl pill inside card */
+  const ctrlDot  = document.getElementById('sc-ctrl-dot');
+  const ctrlText = document.getElementById('sc-ctrl-text');
+  const mainCard = document.getElementById('sc-main-card');
+  if (ctrlDot && ctrlText) {
+    ctrlDot.style.background  = active ? '#ef4444' : '#22c55e';
+    ctrlText.textContent      = active ? 'Offline' : 'Online';
+  }
+  if (mainCard) {
+    mainCard.classList.toggle('sc-danger', active);
+  }
+
+  /* Alert bar */
+  const alertEl = document.getElementById('sc-alert');
+  if (alertEl) alertEl.classList.toggle('sc-show', active);
+
+  /* Live countdown panel */
+  const liveEl   = document.getElementById('sc-live');
+  const remainEl = document.getElementById('sc-live-remain');
+  const titleEl  = document.getElementById('sc-live-title');
+  const startEl  = document.getElementById('sc-live-start');
+  const barEl    = document.getElementById('sc-live-bar');
+  if (liveEl) {
+    liveEl.classList.toggle('sc-show', active);
+    if (active && remainEl && titleEl && startEl && barEl) {
+      const elapsed   = Date.now() - (state.shutdownStart || 0);
+      const totalMs   = SC_COUNTDOWN_SEC * 1000;
+      const remaining = Math.max(0, totalMs - elapsed);
+      const pct       = (remaining / totalMs) * 100;
+      remainEl.textContent = Math.ceil(remaining / 1000) + 's';
+      titleEl.textContent  = state.title || '—';
+      startEl.textContent  = state.shutdownStart
+        ? new Date(state.shutdownStart).toLocaleTimeString('id-ID')
+        : '—';
+      barEl.style.width = pct + '%';
+    }
+  }
+
+  /* Stat: Mode Website */
+  const statMode = document.getElementById('sc-stat-mode');
+  if (statMode) {
+    statMode.textContent = active ? 'Maintenance' : 'Normal';
+    statMode.style.color = active ? '#f87171' : '#22c55e';
+  }
+  const statServer = document.getElementById('sc-stat-server');
+  if (statServer) {
+    statServer.textContent = active ? 'Shutdown' : 'Online';
+    statServer.style.color = active ? '#f87171' : '#22c55e';
+  }
+
+  /* Buttons */
+  const btnOff = document.getElementById('sc-btn-off');
+  const btnOn  = document.getElementById('sc-btn-on');
+  if (btnOff) btnOff.disabled = active;
+  if (btnOn)  btnOn.disabled  = !active;
+}
+
+function scDoShutdown() {
+  const titleInput = document.getElementById('sc-input-title');
+  const msgInput   = document.getElementById('sc-input-msg');
+  const title      = (titleInput?.value || '').trim() || 'Website Akan Ditutup';
+  const message    = (msgInput?.value   || '').trim() || 'Harap segera menyelesaikan aktivitas Anda.';
+
+  const state = {
+    isShutdown   : true,
+    shutdownStart: Date.now(),
+    duration     : SC_COUNTDOWN_SEC * 1000,
+    title, message,
+  };
+  scSetState(state);
+  /* Trigger other tabs via storage event */
+  window.dispatchEvent(new StorageEvent('storage', {
+    key     : SC_STORAGE_KEY,
+    newValue: JSON.stringify(state),
+  }));
+  scAddLog(`Shutdown dimulai — "${title}"`, 'danger');
+  scUpdateUI();
+  showToast('Website sedang dimatikan... countdown 20 detik berjalan!', 'error');
+}
+
+function scDoActivate() {
+  scClearState();
+  window.dispatchEvent(new StorageEvent('storage', {
+    key     : SC_STORAGE_KEY,
+    newValue: null,
+  }));
+  scAddLog('Website diaktifkan kembali', 'success');
+  scUpdateUI();
+  showToast('Website berhasil diaktifkan kembali!', 'success');
+}
+
+async function loadAdminSiteControl() {
+  if (currentUser?.role !== 'admin') return;
+  scRenderLog();
+  scUpdateUI();
+
+  /* Live poll setiap detik saat di halaman ini */
+  clearInterval(scPollTimer);
+  scPollTimer = setInterval(() => {
+    if (document.getElementById('section-admin-sitecontrol')?.classList.contains('active')) {
+      scUpdateUI();
+    } else {
+      clearInterval(scPollTimer);
+    }
+  }, 1000);
+
+  /* Juga live downtime di sc-stat-cd jika shutdown aktif */
+  scAddLog('Admin membuka Site Control', 'info');
 }
 
 /* ─────────────────────────────────────────────────────────────
